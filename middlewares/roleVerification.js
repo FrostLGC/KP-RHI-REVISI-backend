@@ -6,7 +6,12 @@ const roleVerification = {
   // Middleware to check if user has one of the allowed roles
   allowRoles: (allowedRoles) => {
     return (req, res, next) => {
-      if (!req.user || !allowedRoles.includes(req.user.role)) {
+      if (!req.user) {
+        return res.status(403).json({ message: "Access denied: insufficient role" });
+      }
+      // Map 'member' role to 'user' for compatibility
+      const userRole = req.user.role === "member" ? "user" : req.user.role;
+      if (!allowedRoles.includes(userRole)) {
         return res.status(403).json({ message: "Access denied: insufficient role" });
       }
       next();
