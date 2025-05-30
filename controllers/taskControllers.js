@@ -241,10 +241,16 @@ const getTasks = async (req, res) => {
 
 const getTaskById = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id).populate(
-      "assignedTo",
-      "name email profileImageUrl"
-    );
+    const task = await Task.findById(req.params.id).populate([
+      {
+        path: "assignedTo",
+        select: "name email profileImageUrl",
+      },
+      {
+        path: "updatedBy",
+        select: "name email profileImageUrl",
+      },
+    ]);
 
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -452,7 +458,17 @@ const updateTaskChecklist = async (req, res) => {
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-    if (!task.assignedTo.includes(req.user._id) && req.user.role !== "admin") {
+    // Authorization: allow if superadmin, or assigned user, or admin
+    const isAssigned = task.assignedTo.some(
+      (userId) => userId.toString() === req.user._id.toString()
+    );
+    if (
+      !(
+        req.user.role === "superadmin" ||
+        isAssigned ||
+        req.user.role === "admin"
+      )
+    ) {
       return res
         .status(403)
         .json({ message: "You are not authorized to update this task" });
@@ -466,6 +482,13 @@ const updateTaskChecklist = async (req, res) => {
     }
 
     task.todoChecklist = todoChecklist;
+    task.updatedBy = req.user._id;
+
+    // Add to update history
+    task.updateHistory.push({
+      user: req.user._id,
+      updatedAt: new Date(),
+    });
 
     // auto update progress
     const completedCount = todoChecklist.filter(
@@ -485,10 +508,20 @@ const updateTaskChecklist = async (req, res) => {
     }
 
     await task.save();
-    const updatedTask = await Task.findById(req.params.id).populate(
-      "assignedTo",
-      "name email profileImageUrl"
-    );
+    const updatedTask = await Task.findById(req.params.id).populate([
+      {
+        path: "assignedTo",
+        select: "name email profileImageUrl",
+      },
+      {
+        path: "updatedBy",
+        select: "name email profileImageUrl",
+      },
+      {
+        path: "updateHistory.user",
+        select: "name email profileImageUrl",
+      },
+    ]);
 
     res.json({
       message: "Task checklist updated successfully",
