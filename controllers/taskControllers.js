@@ -250,6 +250,10 @@ const getTaskById = async (req, res) => {
         path: "updatedBy",
         select: "name email profileImageUrl",
       },
+      {
+        path: "updateHistory.user",
+        select: "name email profileImageUrl",
+      },
     ]);
 
     if (!task) {
@@ -397,6 +401,14 @@ const updateTask = async (req, res) => {
       };
     }
 
+    // Add to update history
+    task.updateHistory.push({
+      user: req.user._id,
+      updatedAt: new Date(),
+    });
+
+    task.updatedBy = req.user._id;
+
     const updatedTask = await task.save();
     res.json({ message: "Task updated successfully", updatedTask });
   } catch (error) {
@@ -442,6 +454,14 @@ const updateTaskStatus = async (req, res) => {
       task.todoChecklist.forEach((item) => (item.completed = true));
       task.progress = 100;
     }
+
+    // Add to update history
+    task.updateHistory.push({
+      user: req.user._id,
+      updatedAt: new Date(),
+    });
+
+    task.updatedBy = req.user._id;
 
     await task.save();
     res.json({ message: "Task status updated successfully", task });
