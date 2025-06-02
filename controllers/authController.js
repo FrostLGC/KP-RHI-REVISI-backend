@@ -41,7 +41,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      profileImageUrl,
+      profileImageUrl: profileImageUrl && profileImageUrl.trim() !== "" ? profileImageUrl : "http://localhost:5000/uploads/1746817107938-User.jpg",
       role,
       position,
     });
@@ -137,7 +137,7 @@ const updateUserProfile = async (req, res) => {
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
-      profileImageUrl: updatedUser.profileImageUrl, // Anda bisa menambahkan ini jika diperlukan
+      profileImageUrl: updatedUser.profileImageUrl,
       role: updatedUser.role,
       position: updatedUser.position,
       token: generateToken(updatedUser._id),
