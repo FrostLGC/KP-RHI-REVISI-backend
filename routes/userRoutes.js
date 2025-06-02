@@ -7,6 +7,7 @@ const {
   updateUserPosition,
   updateUserProfilePhoto,
   updateUserRole,
+  deleteUser,
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -30,6 +31,12 @@ router.put(
   protect,
   roleVerification.superadminOnly,
   updateUserRole
+);
+router.delete(
+  '/:id',
+  protect,
+  roleVerification.superadminOnly,
+  deleteUser
 );
 
 module.exports = router;

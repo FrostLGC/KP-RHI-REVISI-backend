@@ -85,10 +85,29 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+// @desc    Delete user (superadmin only)
+// @route   DELETE /api/users/:id
+// @access  Private/superadmin
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Delete user tasks or related data if needed
+    await Task.deleteMany({ assignedTo: user._id });
+    await User.deleteOne({ _id: user._id });
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   getUsers,
   getUserById,
   updateUserPosition,
   updateUserProfilePhoto,
   updateUserRole,
+  deleteUser,
 };
